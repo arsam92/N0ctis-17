@@ -184,12 +184,12 @@ function renderRelay() {
 function renderMask() {
   const rows = [
     ["X","T","H","X","E"],
-    ["X","R","E","X","A"],
-    ["X","A","S","X","K"],
-    ["X","E","N","X","E"],
-    ["X","V","E","X","R"],
-    ["X","A","K","X","E"],
-    ["X","Y","X","X","X"]
+    ["X","A","N","X","S"],
+    ["X","W","E","X","R"],
+    ["X","W","A","X","S"],
+    ["X","N","E","X","V"],
+    ["X","E","R","X","A"],
+    ["X","K","E","X","Y"]
   ];
 
   const board = rows.map(row => `
