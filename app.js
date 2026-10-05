@@ -151,46 +151,98 @@ function renderParadox() {
   `, "N17 // PHASE 02");
 }
 
-function renderMeta() {
+function renderRelay() {
   shell(`
-    <h2>PHASE 03 // THE FIRST ANSWER</h2>
-    <p>You now have two results:</p>
-    <div class="big">PARADOX / NO</div>
+    <h2>PHASE 03 // THE RELAY</h2>
+    <p>Four statements gave you a contradiction.</p>
+    <p>Now there are five relays. Each is either 0 or 1.</p>
+    <p>Find the only configuration that satisfies every rule.</p>
 
-    <p>Most solvers will try to turn them into a key.</p>
-    <p>Don't.</p>
+    <div class="witness-panel">
+      <div class="statement"><span>1.</span> Exactly three relays are ON.</div>
+      <div class="statement"><span>2.</span> A and B are different.</div>
+      <div class="statement"><span>3.</span> C is ON exactly when A and E are different.</div>
+      <div class="statement"><span>4.</span> If D is ON, B must be ON.</div>
+      <div class="statement"><span>5.</span> E is ON exactly when A is OFF.</div>
+    </div>
+
+    <p class="prompt">OUTPUT // A B C D E</p>
+
+    <div class="input-row">
+      <input id="answer" maxlength="5" autocomplete="off" spellcheck="false"
+        aria-label="Five-bit relay configuration" inputmode="numeric">
+      <button class="submit" data-action="relay-submit">SUBMIT</button>
+    </div>
+
+    <div id="status" class="status"></div>
+    ${progress(76)}
+  `, "N17 // PHASE 03");
+
+  document.querySelector("#answer").focus();
+}
+
+function renderMask() {
+  const rows = [
+    ["X","T","H","X","E"],
+    ["X","R","E","X","A"],
+    ["X","A","S","X","K"],
+    ["X","E","N","X","E"],
+    ["X","V","E","X","R"],
+    ["X","A","K","X","E"],
+    ["X","Y","X","X","X"]
+  ];
+
+  const board = rows.map(row => `
+    <div class="signal-row" style="grid-template-columns:repeat(5,44px);min-width:260px;justify-content:center;">
+      ${row.map((char, index) => `<span class="signal-cell ${index === 1 || index === 2 || index === 4 ? "witness" : ""}" style="width:44px;height:36px;font-size:18px">${char}</span>`).join("")}
+    </div>
+  `).join("");
+
+  shell(`
+    <h2>PHASE 04 // THE MASK</h2>
+    <p>You solved the relay.</p>
+    <div class="big">01101</div>
+    <p>Do not convert it. Do not calculate with it.</p>
+    <p>Use it as a <strong>mask</strong> against the seven rows below.</p>
+
+    <div class="signal-board">${board}</div>
 
     <div class="reveal">
-      <p class="prompt">THE SYSTEM ASKS ONE QUESTION:</p>
-      <p>Which part of this challenge has been trying to make you solve the wrong problem?</p>
+      <p class="prompt">READ THE SELECTED CELLS IN ORDER.</p>
+      <p>Then enter the sentence without spaces.</p>
     </div>
 
-    <div class="choice-row">
-      <button data-action="meta-a">THE SYMBOLS</button>
-      <button data-action="meta-b">THE LOGIC</button>
-      <button data-action="meta-c">THE QUESTIONS</button>
-      <button data-action="meta-d">ME</button>
+    <div class="input-row">
+      <input id="answer" autocomplete="off" spellcheck="false" aria-label="Masked message">
+      <button class="submit" data-action="mask-submit">SUBMIT</button>
     </div>
+
     <div id="status" class="status"></div>
-    ${progress(82)}
-  `, "N17 // PHASE 03");
+    ${progress(90)}
+  `, "N17 // PHASE 04");
+
+  document.querySelector("#answer").focus();
 }
 
 function renderEnd() {
   shell(`
-    <h2>PHASE 04 // OPEN</h2>
-    <div class="big">YOU NOTICED THE QUESTION.</div>
-    <p>The easy questions were never there to teach you anything.</p>
-    <p>The image was never asking for a word.</p>
-    <p>The paradox was never asking for a binary answer.</p>
-    <p>They were tests of whether you would accept the frame presented to you.</p>
+    <h2>PHASE 05 // THE WRONG QUESTION</h2>
+    <div class="big">THEANSWERWASNEVERAKEY</div>
+
+    <p>You were rewarded for solving three easy questions.</p>
+    <p>You extracted a word from an image.</p>
+    <p>You proved a contradiction.</p>
+    <p>You solved a five-bit system.</p>
+    <p>Then you used the output as a mask instead of a number.</p>
+
     <div class="reveal">
-      <p class="prompt">NEXT CHANNEL:</p>
-      <div class="big">NOT YET</div>
-      <p>Seven witnesses remain unaccounted for.</p>
+      <p class="prompt">N17 // FINAL NOTE</p>
+      <p>The challenge has been teaching you to search for answers.</p>
+      <p>The next phase will punish that habit.</p>
+      <div class="big">ASK A BETTER QUESTION.</div>
     </div>
     ${progress(100)}
-  `, "N17 // PHASE 04");
+  `, "N17 // CHANNEL OPEN");
 }
 
 function setStatus(message, good = false) {
@@ -239,15 +291,32 @@ function answerParadox(value) {
     setStatus("Wrong. Try assigning truth values. The contradiction is the point.");
     return;
   }
-  renderMeta();
+  renderRelay();
 }
 
-function answerMeta(value) {
-  if (value !== "THE QUESTIONS") {
+function submitRelay() {
+  const input = document.querySelector("#answer");
+  const answer = normalize(input?.value ?? "").replace(/ /g, "");
+
+  if (answer !== "01101") {
     state.attempts++;
-    setStatus("Close. Look at what every phase forced you to assume.");
+    setStatus("Wrong configuration. Every rule must be true at the same time.");
     return;
   }
+
+  renderMask();
+}
+
+function submitMask() {
+  const input = document.querySelector("#answer");
+  const answer = normalize(input?.value ?? "").replace(/ /g, "");
+
+  if (answer !== "THEANSWERWASNEVERAKEY") {
+    state.attempts++;
+    setStatus("Wrong extraction. The relay output is a mask, not a number.");
+    return;
+  }
+
   renderEnd();
 }
 
@@ -271,23 +340,17 @@ terminal.addEventListener("click", (event) => {
     case "signal-submit":
       submitSignal();
       break;
+    case "relay-submit":
+      submitRelay();
+      break;
+    case "mask-submit":
+      submitMask();
+      break;
     case "paradox-yes":
       answerParadox("YES");
       break;
     case "paradox-no":
       answerParadox("NO");
-      break;
-    case "meta-a":
-      answerMeta("THE SYMBOLS");
-      break;
-    case "meta-b":
-      answerMeta("THE LOGIC");
-      break;
-    case "meta-c":
-      answerMeta("THE QUESTIONS");
-      break;
-    case "meta-d":
-      answerMeta("ME");
       break;
   }
 });
